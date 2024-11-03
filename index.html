@@ -1,0 +1,331 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8"> 
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"> 
+    <title>视频库</title> 
+    
+    <style>
+
+        /* 输入框 */
+        #searchInput {
+            padding: 10px; 
+            border: 1px solid #ccc; 
+            border-radius: 5px; 
+            width: 300px; 
+            font-size: 16px; 
+        }
+
+        /* 按钮 */
+        .btn {
+            padding: 10px 15px; 
+            background-color: #3498db; 
+            color: #fff;
+            border-radius: 5px; 
+            cursor: pointer; 
+        }
+
+        
+
+        /* 页眉 */
+        header {
+            display: flex; /* 使用flexbox布局 */
+            justify-content: space-between; /* 在两端对齐 */
+            align-items: center; /* 垂直居中对齐 */
+            background: #ff4d4d; 
+            color: #fff; 
+            padding: 1em;
+        }
+
+        /* 视频列表区 */
+        #video-list {
+            margin-top: 10px; 
+            display: flex; 
+            padding: 2em; 
+            gap: 1em; /* 条目之间的间隙 */
+            justify-content: center; /* 内容居中对齐 */
+        }
+
+        
+
+        /* 视频条目样式 */
+        .video-item {
+            cursor: pointer; 
+            background: #fff; 
+            border: 1px solid #574c4c; 
+            border-radius: 5px; 
+            padding: 10px; 
+            margin: 5px 0; 
+            transition: box-shadow 0.3s; /* 阴影过渡效果 */
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1); /* 添加阴影效果 */
+            padding: 1em; 
+            max-width: 300px; 
+        }
+
+        /* 视频条目悬停时的效果 */
+        .video-item:hover {
+            box-shadow: 0 2px 10px rgba(0,0,0,0.2); /* 悬停时添加阴影 */
+        }
+        
+        /* 视频缩略图 */
+        .video-item img {
+            width: 100%; 
+            border-radius: 8px; 
+        }
+
+        /* 视频播放区 */
+        #video-player {
+            display: none; /* 初始隐藏播放区 */
+            margin-top: 20px; 
+            text-align: center; 
+            position: relative; /* 位置为相对，以便子元素使用绝对定位 */
+        }
+
+        /* 视频尺寸 */
+        video {
+            width: 80%; 
+            max-width: 600px; 
+        }
+
+       
+        /* 视频简介 */
+        .video-description {
+            display: none; /* 默认隐藏简介 */
+            margin-top: 5px; 
+        }
+
+        /* 视频播放器的样式设置 */
+        #player {
+        width: 100%; /* 宽度为100% */
+        max-width: 800px; /* 最大宽度设置为800px */
+        margin-bottom: 1em; /* 下边距 */
+        }
+
+        /* 控制按钮的容器 */
+        #controls {
+        display: flex; 
+        justify-content: center; /* 内容居中对齐 */
+        gap: 0.5em; /* 按钮之间的间隙 */
+        }
+
+        /* 进度条 */
+        #progressBar {
+        width: 200px; 
+        }
+
+        /* 弹幕 */
+        #danmu {
+        margin-top: 1em; 
+        }
+
+        
+        /* 弹幕显示区 */
+        #danmuDisplay {
+        position: absolute; /* 绝对定位 */
+        top: 0; /* 顶部对齐 */
+        left: 0; /* 左侧对齐 */
+        width: 100%; 
+        height: 100%;
+        pointer-events: none; /* 禁止鼠标事件穿透，以便下面的元素可交互 */
+        }
+
+        /* 弹幕文本 */
+        .danmu-text {
+        position: absolute; /* 绝对定位 */
+        white-space: nowrap; /* 不换行 */
+        font-size: 18px; /* 字体大小 */
+        color: white; /* 字体颜色为白色 */
+        text-shadow: 1px 1px 2px black; /* 添加黑色阴影 */
+        animation: danmuMove 8s linear; /* 添加移动动画 */
+        }
+
+        /* 弹幕移动动画的关键帧设置 不放会卡住*/
+        @keyframes danmuMove {
+        0% {
+            left: 100%; /* 开始时在右侧外部 */
+        }
+        100% {
+            left: -100%; /* 结束时在左侧外部 */
+        }
+        }
+
+        /* 弹幕输入框 */
+        #danmuInput {
+        width: 80%; 
+        padding: 0.5em; 
+        margin: 0.5em 0; 
+        }
+
+        /* 按钮的样式设置 */
+        button {
+        padding: 0.5em; 
+        background: #ff4d4d; 
+        color: white; 
+        border-radius: 5px; 
+        cursor: pointer; 
+        }
+
+        /* 按钮悬停时 */
+        button:hover {
+        background: #e63939; /* 悬停时背景颜色变暗 */
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>opop(◦-◦)つロ乾杯</h1> 
+        <div>
+            <input type="text" id="searchInput" placeholder="搜索视频..."> <!-- 搜索框 -->
+            <button class="btn" onclick="searchVideos()">搜索</button> <!-- 搜索按钮 -->
+        </div>
+    </header>
+
+    <body>
+        <!-- 视频列表展示区 -->
+        <section id="video-list">
+            <div class="video-item" data-title="伍六七" data-duration="时长: 2:23" data-description="故事的主人翁伍六七和鸡大保的牛杂摊生意清冷，鸡大保却突然开始忽悠伍六七可以当刺客赚大钱。因与自己身世息息相关，伍六七勉强应和鸡大保的提议。只会玩剪刀的伍六七压根不知道如何当刺客杀人，鸡大保连哄带骗教给了伍六七一系列当刺客的技能，并怂恿伍六七去婚礼现场实践，结果把事搞的乱七八糟，伍六七被追杀逃跑到海边，却意外撞见疑似知道自己身世的机器人。" onclick="showVideoInfo('images/伍六七.mp4', this)">
+                <img src="images/伍六七.jpg" alt="伍六七"> 
+                <h2>伍六七</h2> 
+                <p class="video-description"></p> 
+            </div>
+            <div class="video-item" data-title="草神生日" data-duration="时长: 1:47" data-description="纳西妲，米哈游出品的游戏《原神》及其衍生作品中的角色，真名布耶尔，“尘世七执政”中的草神，被须弥人给予“小吉祥草王”的爱称 [3]。现今七神中最年轻的一位，自诞生起已五百年 [2]。倾听与观察是纳西妲了解这个世界的重要途径 [63]。或许是因为久居净善宫，纳西妲对世间万物都有着旺盛的好奇心" onclick="showVideoInfo('images/草神生日.mp4', this)">
+                <img src="images/草神生日.jpg" alt="草神生日2"> 
+                <h2>草神生日</h2> 
+                <p class="video-description"></p> 
+            </div>
+            <!-- 可以添加更多视频条目 -->
+        </section>
+
+        <!-- 视频播放区 -->
+        <section id="video-player">
+            <h2 id="videoTitle"></h2> 
+            <video id="player" controls> <!-- 视频播放器 -->
+                <source  src="" type="video/mp4"> 
+                您的浏览器不支持 video 标签。
+            </video>
+            <div id="controls">
+                <button class="btn" onclick="playPause()">播放/暂停</button> <!-- 播放/暂停按钮 -->
+                <button class="btn" onclick="changeSpeed(0.5)">0.5x</button> <!-- 速度按钮 -->
+                <button class="btn" onclick="changeSpeed(1)">1x</button> <!-- 速度按钮 -->
+                <button class="btn" onclick="changeSpeed(1.5)">1.5x</button> <!-- 速度按钮 -->
+                <button class="btn" onclick="changeSpeed(2)">2x</button> <!-- 速度按钮 -->
+                <input type="range" id="progressBar" value="0" onchange="seekVideo()"> <!-- 进度条 -->
+                <button class="btn" onclick="downloadCurrentVideo()">下载视频</button> <!-- 下载按钮 -->
+            </div>
+
+            <div id="danmu">
+                <h3>弹幕</h3> 
+                <input type="text" id="danmuInput" placeholder="发送弹幕..."> <!-- 弹幕输入框 -->
+                <button class="btn" onclick="sendDanmu()">发送</button> <!-- 发送弹幕按钮 -->
+                <div id="danmuDisplay"></div> <!-- 弹幕显示区域 -->
+            </div>
+        </section>
+    </body>
+
+    <script>
+        // 获取元素
+        const player = document.getElementById('player');
+        const progressBar = document.getElementById('progressBar');
+        const danmuDisplay = document.getElementById('danmuDisplay');
+
+        // 播放/暂停功能
+        function playPause() {
+            if (player.paused) {
+                player.play(); 
+            } else {
+                player.pause(); 
+            }
+        }
+
+        // 改变播放速度
+        function changeSpeed(speed) {
+            player.playbackRate = speed; // 设置视频播放速度
+        }
+
+        // 当视频播放时更新进度条
+        player.addEventListener('timeupdate', () => {
+            progressBar.value = (player.currentTime / player.duration) * 100; // 更新进度条的值
+        });
+
+        // 视频跳转功能
+        function seekVideo() {
+            const seekTime = (progressBar.value / 100) * player.duration; // 计算跳转时间
+            player.currentTime = seekTime; // 跳转到指定时间
+        }
+
+// 显示视频信息并加载视频
+function showVideoInfo(src, element) {
+    const title = element.getAttribute('data-title'); 
+    const duration = element.getAttribute('data-duration');
+    const description = element.getAttribute('data-description'); 
+
+    document.getElementById('videoTitle').innerText = title; // 设置视频标题
+    player.src = src; // 设置视频源
+    document.getElementById('video-player').style.display = 'block'; // 显示播放器
+    player.play(); // 自动播放
+
+    // 更新简介并显示
+    const videoDescription = element.querySelector('.video-description');
+    videoDescription.innerText = `${description} (${duration})`; // 简介＋时长
+    videoDescription.style.display = 'block'; // 显示简介
+}
+
+        // 下载当前播放的视频
+        function downloadCurrentVideo() {
+            const videoURL = player.currentSrc; // 获取当前视频源
+            download(videoURL, 'downloaded video' + '.mp4');
+        }
+
+        // 下载函数
+        function download(url, name) {
+            const a = document.createElement("a"); 
+            a.href = url; 
+            a.download = name; 
+            document.body.appendChild(a); 
+            a.click(); 
+            document.body.removeChild(a); 
+        }
+
+        // 视频搜索功能
+        function searchVideos() {
+            const query = document.getElementById('searchInput').value.toLowerCase(); 
+            const videoItems = document.querySelectorAll('.video-item'); 
+
+            videoItems.forEach(video => {
+                const title = video.getAttribute('data-title').toLowerCase(); 
+                const description = video.getAttribute('data-description').toLowerCase(); 
+                const isVisible = title.includes(query) || description.includes(query); 
+                
+                video.style.display = isVisible ? 'block' : 'none'; // 根据匹配结果显示或隐藏视频条目
+                
+            });
+        }
+
+        // 发送弹幕功能
+        function sendDanmu() {
+            const danmuInput = document.getElementById('danmuInput'); 
+            const danmuText = danmuInput.value.trim(); 
+            
+            if (danmuText) { 
+                const danmuElement = document.createElement('div'); 
+                danmuElement.className = 'danmu-text'; 
+                danmuElement.textContent = danmuText; 
+
+                // 随机高度，让弹幕从不同位置出现
+                danmuElement.style.top = `${Math.random() * 80}%`; // 随机设置弹幕垂直位置
+                
+                danmuDisplay.appendChild(danmuElement); // 将弹幕元素添加到显示区域
+                
+                // 移除弹幕，当动画结束时
+                danmuElement.addEventListener('animationend', () => {
+                    danmuElement.remove(); // 动画结束后移除弹幕
+                });
+
+                danmuInput.value = ''; // 清空输入框
+            }
+        }
+    </script>
+
+</body>
+</html>
+
