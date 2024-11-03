@@ -1,0 +1,19 @@
+{
+    "manifest_version": 2,
+    "name": "Bilibili Speed Controller",
+    "version": "1.0",
+    "description": "Control the playback speed of Bilibili videos.",
+    "permissions": [
+      "activeTab",
+      "https://*.bilibili.com/*"
+    ],
+    "browser_action": {
+      "default_popup": "popup.html"
+    },
+    "content_scripts": [
+      {
+        "matches": ["https://*.bilibili.com/*"],
+        "js": ["content.js"]
+      }
+    ]
+  }
